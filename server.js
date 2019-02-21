@@ -40,7 +40,8 @@ app.get('/movies', (req, res) => {
 
   if (avg_vote) {
     response = response.filter(movie =>
-      movie.avg_vote >= avg_vote);
+      Number(movie.avg_vote) >= Number(avg_vote)
+    );
   }
 
   res.send(response);
