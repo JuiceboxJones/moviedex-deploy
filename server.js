@@ -9,13 +9,14 @@ const app = express();
 require('dotenv').config();
 
 app.use(helmet());
-app.use(morgan());
 app.use(cors());
+const morganSetting = process.env.NODE_ENV === 'production' ? 'tiny' : 'common';
+app.use(morgan(morganSetting));
 
 app.use((req, res, next) => {
   const authToken = req.get('Authorization');
   const API_TOKEN = process.env.API_TOKEN;
-  if(!authToken || authToken.split(' ')[1] !== API_TOKEN){
+  if (!authToken || authToken.split(' ')[1] !== API_TOKEN) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -39,14 +40,24 @@ app.get('/movies', (req, res) => {
   }
 
   if (avg_vote) {
-    response = response.filter(movie =>
-      Number(movie.avg_vote) >= Number(avg_vote)
+    response = response.filter(
+      movie => Number(movie.avg_vote) >= Number(avg_vote)
     );
   }
 
   res.send(response);
 });
 
-app.listen(8000, () => {
-  console.log('Server is listening on port 8000');
+app.use((error, req, res, next) => {
+  let response;
+  if (process.env.NODE_ENV === 'production') {
+    response = { error: { message: 'server error' } };
+  } else {
+    response = { error };
+  }
+  res.status(500).json(response);
 });
+
+const PORT = process.env.PORT || 8000;
+
+app.listen(PORT, () => {});
